@@ -1,0 +1,53 @@
+version: "3"
+services:
+    api:
+        build: .
+        restart: always
+        volumes:
+            - ./app:/app:z
+            - ./uploads:/uploads:z
+            - ./downloads:/downloads:z
+        logging:
+            driver: "json-file"
+            options:
+                max-size: "2m"
+                max-file: "10"
+        environment:
+            - CELERY_BACKEND_URL=redis://redis
+            - CELERY_BROKER_URL=amqp://rabbitmq
+            - USE_SOCK_FILE=True
+        depends_on:
+            - celery
+            - rabbitmq
+            - redis
+
+    celery:
+        build:
+            context: .
+            dockerfile: Dockerfile-celery
+        restart: always
+        volumes:
+            - ./celery_tasks:/celery_tasks:z
+            - ./uploads:/uploads:z
+            - ./downloads:/downloads:z
+        logging:
+            driver: "json-file"
+            options:
+                max-size: "2m"
+                max-file: "10"
+        environment:
+            - CELERY_BACKEND_URL=redis://redis
+            - CELERY_BROKER_URL=amqp://rabbitmq
+        depends_on:
+            - rabbitmq
+            - redis
+
+    rabbitmq:
+        image: 'rabbitmq:3.8-alpine'
+        expose:
+            - "5672"
+
+    redis:
+        image: 'redis:6.0-alpine'
+        expose:
+            - "6379"

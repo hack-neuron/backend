@@ -30,6 +30,7 @@ celery_app = Celery(
 
 
 def get_task_by_uuid(uuid: str):
+    """Достаёт задачу из очереди по заданному uuid."""
     return celery_app.AsyncResult(uuid)
 
 
@@ -37,6 +38,14 @@ def get_task_by_uuid(uuid: str):
 async def upload(doc_markup: UploadFile = File(...),
                  ai_markup: UploadFile = File(...),
                  scan: UploadFile = File(...)):
+    """Загрузка файлов на сервер.
+    `doc_markup` -- разметка эксперта
+    `ai_markup` -- разметка ИИ-сервиса
+    `scan` -- рентгенограмма
+
+    Отдаёт `id: str` задачи, поставленной в очередь на выполнение.
+    Статус задачи можно узнать с помощью метода `get_status`.
+    """
     for upload_file in (doc_markup, ai_markup, scan):
         filename = upload_file.filename
         contents = await upload_file.read()
@@ -55,6 +64,12 @@ async def upload(doc_markup: UploadFile = File(...),
 
 @app.post('/upload_many')
 async def upload(archive_file: UploadFile = File(...)):
+    """Загрузка архива с файлами на сервер.
+    `archive_file` -- архив с разметкой
+
+    Отдаёт `id: str` задачи, поставленной в очередь на выполнение.
+    Статус задачи можно узнать с помощью метода `get_status`.
+    """
     filename = archive_file.filename
     contents = await archive_file.read()
     path = os.path.join(upload_path, filename)
@@ -70,6 +85,7 @@ async def upload(archive_file: UploadFile = File(...)):
 
 @app.get('/get_status')
 async def get_status(id_: str):
+    """Получение статуса выполнения задачи оп её `id`."""
     task = get_task_by_uuid(id_)
     state = task.state
     response = {'state': state}

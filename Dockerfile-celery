@@ -5,6 +5,10 @@ ADD script/entrypoint-celery.sh /entrypoint.sh
 ADD requirements-celery.txt /requirements.txt
 
 RUN \
+    apt-get update && \
+    apt-get install -y python3-opencv
+
+RUN \
     pip install --upgrade pip && \
     pip install -r requirements.txt && \
     chmod +x /entrypoint.sh

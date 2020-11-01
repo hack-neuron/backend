@@ -160,18 +160,18 @@ class CompareMarkups(Task):
             grads (dict): данные для отрисовки графика значимости мер
         """
         settings = {
-            "outs" : 5,
-            "input_len" : len(metrics),
-            "architecture" : [31,18],
-            "inputs" : len(metrics.columns),
-            "activation" : "sigmoid"
+            "outs": 5,
+            "input_len": len(metrics),
+            "architecture": [31, 18],
+            "inputs": len(metrics.columns),
+            "activation": "sigmoid"
         }
         p = np.load(path_to_weights)
 
         predicts, grads = lwmw.predict(p, settings, metrics.values)
 
         for i in range(0, settings["outs"]):
-            metrics["preds_" + str(i+1)] = predicts[:,i]
+            metrics["preds_" + str(i + 1)] = predicts[:, i]
         metrics["pred"] = np.argmax(metrics[["preds_1", "preds_2", "preds_3", "preds_4", "preds_5"]].values, axis=1) + 1
         grads = np.sqrt(np.sum(grads[0]**2, axis=0) / len(grads[0])) / np.sqrt(np.sum(grads[0]**2, axis=0) / len(grads[0])).max()
         return metrics["pred"], grads
